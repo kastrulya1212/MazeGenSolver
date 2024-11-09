@@ -4,12 +4,12 @@ import pygame
 import sys
 import random
 
-# __init__
+# INITIALIZATION SETTINGS
 HEIGHT = 480
 WIDTH = 480
 FPS = 5
-SIZE = 30   # Cell size(square)
-W = 5       # Outline thickness
+SIZE = 30    # Cell size(square)
+W = 5        # Outline thickness
 ROWS = 15    #WIDTH // SIZE
 COLS = 15    #HEIGHT // SIZE
 cells = []
@@ -56,28 +56,28 @@ class Explorer:
 
     def move_right(self):
         self.cell.lines[2] = 0
-        new_cell = cells[self.row][self.col+1]
+        new_cell = cells[self.col+1][self.row]
         self.__init__(new_cell)
         self.cell.lines[1] = 0
         self.cell.visited = 1
         self.explorer_draw()
     def move_left(self):
         self.cell.lines[1] = 0
-        new_cell = cells[self.row][self.col-1]
+        new_cell = cells[self.col-1][self.row]
         self.__init__(new_cell)
         self.cell.lines[2] = 0
         self.cell.visited = 1
         self.explorer_draw()
     def move_up(self):
         self.cell.lines[0] = 0
-        new_cell = cells[self.row-1][self.col]
+        new_cell = cells[self.col][self.row-1]
         self.__init__(new_cell)
         self.cell.lines[3] = 0
         self.cell.visited = 1
         self.explorer_draw()
     def move_down(self):
         self.cell.lines[3] = 0
-        new_cell = cells[self.row+1][self.col]
+        new_cell = cells[self.col][self.row+1]
         self.__init__(new_cell)
         self.cell.lines[0] = 0
         self.cell.visited = 1
@@ -92,16 +92,16 @@ class Recursion_Generartion(Explorer):
     def neighbour_check(self):
         ans = []
         if self.row!=0:
-            if not((cells[self.row - 1][self.col]).visited):
+            if not((cells[self.col][self.row-1]).visited):
                 ans.append(0)
         if self.col!=0:
-            if not((cells[self.row][self.col - 1]).visited):
+            if not((cells[self.col-1][self.row]).visited):
                 ans.append(1)
         if self.col!=COLS-1:
-            if not((cells[self.row][self.col+1]).visited):
+            if not((cells[self.col+1][self.row]).visited):
                 ans.append(2)
         if self.row!=ROWS-1:
-            if not((cells[self.row + 1][self.col]).visited):
+            if not((cells[self.col][self.row+1]).visited):
                 ans.append(3)
         return ans
 
@@ -120,13 +120,13 @@ class Recursion_Generartion(Explorer):
 
     def neighbour_by_ind(self, ind):
         if ind == 0:
-            return cells[self.row-1][self.col]
+            return cells[self.col][self.row-1]
         elif ind == 1:
-            return cells[self.row][self.col-1]
+            return cells[self.col-1][self.row]
         elif ind == 2:
-            return cells[self.row][self.col+1]
+            return cells[self.col+1][self.row]
         elif ind == 3:
-            return cells[self.row+1][self.col]
+            return cells[self.col][self.row+1]
 
     def path_step_back(self):
         self.path.pop(-1)
@@ -156,7 +156,7 @@ def start_data():
     for i in range(0,COLS):
         _row = []
         for j in range(0,ROWS):
-            _row.append(Cell(i,j,[1,1,1,1], 0))
+            _row.append(Cell(j,i,[1,1,1,1], 0))
         cells.append(_row)
 
 # functions for debug
@@ -216,9 +216,10 @@ def main():
 main()
 
 
-# TODO LIST:
+# TODO LIST (IDEAS):
 # 1) Cell update synchronized with screen update (vizualization)
 # 2) New maze generation methods
 # 3) Maze solvers
+# 4) Create user keyboard "explorer" control
 
 
