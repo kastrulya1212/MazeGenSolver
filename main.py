@@ -10,7 +10,7 @@ WIDTH = 480
 FPS = 5
 SIZE = 30    # Cell size(square)
 W = 5        # Outline thickness
-ROWS = 15    #WIDTH // SIZE
+ROWS = 10    #WIDTH // SIZE
 COLS = 15    #HEIGHT // SIZE
 cells = []
 
