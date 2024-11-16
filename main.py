@@ -1,5 +1,4 @@
 import time
-from idlelib.debugobj_r import WrappedObjectTreeItem
 
 import pygame
 import sys
@@ -297,7 +296,7 @@ def fill_grind():
             ceil = pygame.Rect(x, y, SIZE, SIZE)
             pygame.draw.rect(screen, GREEN, ceil, W)
 
-def attributes()->None:
+def attributes_check()->None:
     print("CURRENT ATTRIBUTES:")
     print(f"Window size: height={HEIGHT}, width={WIDTH}"); print("FPS:", FPS)
     print(f"Rows and columns: rows={ROWS}, columns={COLS}")
@@ -314,7 +313,7 @@ def border():
 def main():
     # start settings
     running = True; find_end = True
-    attributes()
+    attributes_check()
     screen.fill(BLACK)
     start_data()
     print("One cell byte size:", sys.getsizeof(cells[0][0]))
@@ -389,9 +388,14 @@ main()
 # TODO LIST (IDEAS):
 # in process 1) Cell update synchronized with screen update (vizualization)
 # probably done 1) visual representation have done. Also added optimized drawing system
+#
 # 2) New maze generation methods (at this moment only recursion generation)
+#
 # in process 3) Maze solvers
-# rightHand done 3) Right hand rule solver done
+# done 3) Right hand rule solver done
+#
 # 4) Create user keyboard "explorer" control (just an idea)
-
+#
+# 5) Write user manual and README
+# done 5) Manual and README were created and edited.
 
