@@ -1,17 +1,27 @@
 import time
+from idlelib.debugobj_r import WrappedObjectTreeItem
 
 import pygame
 import sys
 import random
 
+# !EXPLOITATION MANUAL!
+# Steps: 1) open initialization settings (line16-line25)
+#        2) set window size, FPS (var HEIGHT/WIDTH/FPS)
+#        3) set count of rows and columns of a maze (var ROWS/COLS)
+#        4) set drawing speed (var DRAW_SPEED_MULTIPLIER)
+#
+#
+
 # INITIALIZATION SETTINGS
-HEIGHT = 480
-WIDTH = 480
-FPS = 20
-SIZE = 20    # Cell size(square)
-W = 4        # Outline thickness
-ROWS = 20    # WIDTH // SIZE
-COLS = 20    # HEIGHT // SIZE
+HEIGHT = 900   #480
+WIDTH = 1000    #480
+FPS = 60
+ROWS = 100    # WIDTH // SIZE
+COLS = 100    # HEIGHT // SIZE
+DRAW_SPEED_MULTIPLIER = 0.005     # Speed of drawing
+SIZE = (WIDTH*0.8)/max(ROWS,COLS) #8      # Cell size(square)
+W = int(SIZE/2.5)         # Outline thickness
 cells = []
 
 GREEN = (0, 255, 0)
@@ -22,6 +32,7 @@ WHITE = (255, 255, 255)
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
+# 1/(15*15) 100(100*100)
 
 
 #-------------------------------------------
@@ -34,7 +45,7 @@ class Cell:
         self.visited = visited
 
     def draw(self):
-        rect = pygame.Rect(self.col * SIZE, self.row * SIZE, SIZE, SIZE)
+        #rect = pygame.Rect(self.col * SIZE, self.row * SIZE, SIZE, SIZE)
         if self.visited:
             pygame.draw.rect(screen, DARK_GREEN, (self.col*SIZE, self.row*SIZE, SIZE, SIZE))
         if self.lines[0]:
@@ -109,14 +120,12 @@ class Explorer:
             self.init_simple(new_cell)
             #self.explorer_draw()
 
-
 # StartCell --> CurrIsVisible --> CheckNeighbour --> RandomUnvisitedCell -->
 # --> DeleteWall_Curr_and_Neighbour --> CurrCell=Neighbour
 class Recursion_Generartion(Explorer):
-    def __init__(self, cell: Cell):
+    def __init__(self, cell: Cell, path=[]):
         super().__init__(cell)
-        try: self.path = self.path
-        except: self.path = []
+        self.path = path
 
     def neighbour_check(self):
         ans = []
@@ -180,7 +189,7 @@ class Recursion_Generartion(Explorer):
                 self.path_step_back()
         print("Creating done!", "Iterations:", k)
 
-# RightHand_Solver(start_cell, *start_Direction)
+# RightHand_Solver(start_cell, end_cell, *start_Direction)
 # direction is direction TO NEXT CELL
 class RightHand_Solver(Explorer):
     def __init__(self, cell:Cell, end_cell:Cell, direction=0, steps=0):
@@ -258,6 +267,14 @@ class RightHand_Solver(Explorer):
         self.goto_cell(allowed_clocksort[next_counterclock_ind])
         self.cell.visited = 1; self.steps += 1
 
+    def step_search(self, steps):
+        i = 0
+        while i<steps and (self.cell != self.end_cell):
+            self.right_algorithm_step()
+            i+=1
+        if self.cell == self.end_cell:
+            print("Exit found!", self.col, self.row)
+
     def full_search(self):
         k = 0
         while self.cell != self.end_cell:
@@ -280,6 +297,12 @@ def fill_grind():
             ceil = pygame.Rect(x, y, SIZE, SIZE)
             pygame.draw.rect(screen, GREEN, ceil, W)
 
+def attributes()->None:
+    print("CURRENT ATTRIBUTES:")
+    print(f"Window size: height={HEIGHT}, width={WIDTH}"); print("FPS:", FPS)
+    print(f"Rows and columns: rows={ROWS}, columns={COLS}")
+    print(f"Cell sizes: cell_size={SIZE}, outline_thickness={W}"); print(" ")
+
 def border():
     pygame.draw.line(screen, GREEN, [0,0], [COLS*SIZE,0], W)
     pygame.draw.line(screen, GREEN, [0,0], [0,ROWS*SIZE], W)
@@ -291,8 +314,12 @@ def border():
 def main():
     # start settings
     running = True; find_end = True
+    attributes()
     screen.fill(BLACK)
     start_data()
+    print("One cell byte size:", sys.getsizeof(cells[0][0]))
+    print("All cells size (cell_size * count_of_cells)", (sys.getsizeof(cells[-1][-1])*(len(cells[0]) * len(cells)))/(2**20), "Mbytes")
+    print("All cells size (cell_row_size * count_of_rows)", len(cells) * sys.getsizeof(cells[-1]) / (2**20), "Mbytes"); print(" ")
 
     start_cell = cells[0][0]
     end_cell = cells[-1][-1]
@@ -304,10 +331,6 @@ def main():
     # Maze has been generated
 
     solver = RightHand_Solver(start_cell, end_cell)
-    #solver.full_search()
-
-    # dot.move_right(); dot.move_down(); dot.move_right(); dot.move_down()
-    # dot.move_left(); dot.move_left(); dot.move_up(); dot.move_down(); dot.move_down()
 
     # start cells grid
     for _col in cells:
@@ -327,20 +350,27 @@ def main():
                 pygame.quit()
                 sys.exit()
     #---# CODE HERE
-        for _col in cells:
-            for cell in _col:
-                cell.draw()
+        if solver.steps % int(ROWS * COLS * DRAW_SPEED_MULTIPLIER) == 0:
+            # all maze drawing was replaced to redrawing only PATH cells
+            # for _col in cells:
+            #     for cell in _col:
+            #         cell.draw()
+            # solver.explorer_draw()
+            for _cells in solver.path:
+                _cells.draw()
+            solver.explorer_draw()
 
-        solver.explorer_draw()
 
         if solver.cell != end_cell:
-            solver.right_algorithm_step()
+            solver.step_search(int(ROWS * COLS * DRAW_SPEED_MULTIPLIER))
         else:
             if find_end == True: print(f"Solving done! Iterations: {solver.steps}")
+            for _col in cells:
+                for cell in _col:
+                    cell.draw()
+            solver.explorer_draw()
             find_end = False
         pygame.display.update()
-        #time.sleep(0.01)
-
 
     #---# CODE STOP
         #pygame.display.update()
@@ -348,14 +378,20 @@ def main():
 #-----------------------------------------------
 main()
 
+
 # DO NOT FORGET:
-# 1) change "visible" system in creating mode (use "visible" attribute only in searching mode)
+# 1) change "visited" system in creating mode (use "visited" attribute only in searching mode)
+# 1_UPD) "visited" is used in generation and solving as well. After generation
+#         all cells "visited"=0(not visited), and then it uses in solving process.
 # !err 2) __init__ wanna take second argument end_cell
+# !err 2_UPD) error was fixed (__init__ was replaced with "init_behaviour" function)
 
 # TODO LIST (IDEAS):
 # in process 1) Cell update synchronized with screen update (vizualization)
-# 2) New maze generation methods
+# probably done 1) visual representation have done. Also added optimized drawing system
+# 2) New maze generation methods (at this moment only recursion generation)
 # in process 3) Maze solvers
-# 4) Create user keyboard "explorer" control
+# rightHand done 3) Right hand rule solver done
+# 4) Create user keyboard "explorer" control (just an idea)
 
 
