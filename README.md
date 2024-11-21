@@ -20,7 +20,19 @@ Steps:
 2) set window size, FPS (var HEIGHT/WIDTH/FPS)
 3) set count of rows and columns of a maze (var ROWS/COLS)
 4) set drawing speed (var DRAW_SPEED_MULTIPLIER)
+5) go to the def main() and choose maze generation method (Recursion, Prims)
+           and maze solving method (Right hand method). Choose them according to the
+           instructions.
 
+At this moment there are 2 maze generation algorithms and 1 maze solving method. 
+
+Maze generation algorithms: 
+- 1. Recursion algorithm
+- 2. Prim's algorithm
+
+Solving methods:
+- 1. Right hand method
+   
 
 
 ### Coordinate system and cell's important attributes.

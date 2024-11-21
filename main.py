@@ -9,7 +9,9 @@ import random
 #        2) set window size, FPS (var HEIGHT/WIDTH/FPS)
 #        3) set count of rows and columns of a maze (var ROWS/COLS)
 #        4) set drawing speed (var DRAW_SPEED_MULTIPLIER)
-#
+#        5) go to the def main() and choose maze generation method (Recursion, Prims)
+#           and maze solving method (Right hand method). Choose them according to the
+#           instructions.
 #
 
 # INITIALIZATION SETTINGS
@@ -20,7 +22,7 @@ ROWS = 100    # WIDTH // SIZE
 COLS = 100    # HEIGHT // SIZE
 DRAW_SPEED_MULTIPLIER = 0.005     # Speed of drawing
 SIZE = (WIDTH*0.8)/max(ROWS,COLS) #8      # Cell size(square)
-W = int(SIZE/2.5)         # Outline thickness
+W = int(SIZE/3.5)         # Outline thickness
 cells = []
 
 GREEN = (0, 255, 0)
@@ -121,7 +123,7 @@ class Explorer:
 
 # StartCell --> CurrIsVisible --> CheckNeighbour --> RandomUnvisitedCell -->
 # --> DeleteWall_Curr_and_Neighbour --> CurrCell=Neighbour
-class Recursion_Generartion(Explorer):
+class Recursion_Generation(Explorer):
     def __init__(self, cell: Cell, path=[]):
         super().__init__(cell)
         self.path = path
@@ -186,7 +188,80 @@ class Recursion_Generartion(Explorer):
             self.path_searching()
             if self.path != []:
                 self.path_step_back()
-        print("Creating done!", "Iterations:", k)
+        print("Creating done! Recursion generation complete! Iterations:", k)
+
+class Prims_Generation(Explorer):
+    def __init__(self, cell: Cell, mazeParts=[], wallList=[]):
+        super().__init__(cell)
+        self.mazeParts = mazeParts
+        self.wallList = wallList
+
+    def neighbour_check(self, cell:Cell):
+        ans = []
+        if cell.row!=0:
+            ans.append(0)
+        if cell.col!=0:
+            ans.append(1)
+        if cell.col!=COLS-1:
+            ans.append(2)
+        if cell.row!=ROWS-1:
+            ans.append(3)
+        return ans
+
+    def neighbour_by_ind(self, cell:Cell, ind):
+        if ind == 0:
+            return cells[cell.col][cell.row-1]
+        elif ind == 1:
+            return cells[cell.col-1][cell.row]
+        elif ind == 2:
+            return cells[cell.col+1][cell.row]
+        elif ind == 3:
+            return cells[cell.col][cell.row+1]
+
+    def index_inversion(self, ind):
+        if ind==0: return 3
+        elif ind==1: return 2
+        elif ind==2: return 1
+        elif ind==3: return 0
+
+    def add_cell(self, cell: Cell):
+        self.mazeParts.append(cell)
+
+    def add_all_walls(self, cell: Cell):
+        # definite_cell: walls_that_are_in_wall_list
+        self.wallList.append([cell] + self.neighbour_check(cell))
+
+    def wall_loop(self):
+        k = 0
+        while len(self.wallList)!=0:
+            rand_ind_arr = random.randrange(0, len(self.wallList))
+            mas = (self.wallList)[rand_ind_arr]
+
+            rand_ind_wall = random.randrange(1, len(mas))
+            rand_wall = mas[rand_ind_wall]
+
+            neighbour_cell = self.neighbour_by_ind(mas[0], rand_wall)
+            curr_cell = mas[0]
+
+            if neighbour_cell.visited + curr_cell.visited == 1:
+                curr_cell.lines[rand_wall] = 0
+                neighbour_cell.lines[self.index_inversion(rand_wall)] = 0
+                neighbour_cell.visited = 1
+
+                #self.add_cell(neighbour_cell)
+                self.add_all_walls(neighbour_cell)
+            else:
+                ((self.wallList)[rand_ind_arr]).pop(rand_ind_wall)
+                if len(((self.wallList)[rand_ind_arr]))<=1:
+                    self.wallList.remove([curr_cell])
+                    #self.mazeParts.remove(curr_cell)
+            k+=1
+        print("Creating done! Prim's method complete! Iterations: ", k)
+
+    def start_gen(self):
+        self.add_cell(self.cell)
+        self.add_all_walls(self.cell)
+        self.wall_loop()
 
 # RightHand_Solver(start_cell, end_cell, *start_Direction)
 # direction is direction TO NEXT CELL
@@ -315,21 +390,42 @@ def main():
     running = True; find_end = True
     attributes_check()
     screen.fill(BLACK)
+
+    # Filling array grid with "cells obj" and output memory info
     start_data()
     print("One cell byte size:", sys.getsizeof(cells[0][0]))
     print("All cells size (cell_size * count_of_cells)", (sys.getsizeof(cells[-1][-1])*(len(cells[0]) * len(cells)))/(2**20), "Mbytes")
     print("All cells size (cell_row_size * count_of_rows)", len(cells) * sys.getsizeof(cells[-1]) / (2**20), "Mbytes"); print(" ")
 
+    # Addition start settings
     start_cell = cells[0][0]
     end_cell = cells[-1][-1]
     path = [start_cell]
     start_cell.visited = 1
 
-    dot = Recursion_Generartion(start_cell)
-    dot.recursion_generation()
-    # Maze has been generated
 
+    # MAZE GENERATING STARTING...
+    # UNCOMMENT STRING, WHICH GENERATION METHOD YOU WANT TO APPLY:
+
+    # 1) Recursion maze generation
+    dot = Recursion_Generation(start_cell)
+    dot.recursion_generation()
+
+    # 2) Prims maze generation
+    # dot = Prims_Generation(start_cell)
+    # dot.start_gen()
+
+    # MAZE HAS BEEN GENERATED!
+
+
+    # Maze solving...
+    # Choose a solution method:
+
+    # 1) Right hand algorithm
     solver = RightHand_Solver(start_cell, end_cell)
+
+    # Maze has been solved!
+
 
     # start cells grid
     for _col in cells:
